@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MapPin, Search, X, Building2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { BIG_CITIES, searchCities } from '../data/iranCities';
@@ -16,21 +17,53 @@ interface Props {
  * - Clicking the field (while empty) shows the four big cities as quick picks.
  * - Typing filters the full list of Iranian cities.
  * - Choosing a city (click or Enter) fires onSelect.
+ *
+ * The suggestion list is rendered through a portal to <body> with a high
+ * z-index so it always floats above the page. Rendering it inline trapped it
+ * inside the hero section's isolated stacking context (isolation: isolate;
+ * z-index: 40), which made the list appear *behind* the sections below it.
  */
 export default function CitySearchSelect({ value, onChange, onSelect, placeholder }: Props) {
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   // Build the suggestion list: typed → search results, empty → big cities.
   const typed = value.trim().length > 0;
   const results = typed ? searchCities(value, 60) : BIG_CITIES;
 
-  // Close on outside click
+  // Position of the floating list (page coordinates).
+  const [pos, setPos] = useState({ top: 0, left: 0, w: 320 });
+  const updatePos = () => {
+    if (!wrapRef.current) return;
+    const r = wrapRef.current.getBoundingClientRect();
+    setPos({
+      top: r.bottom + window.scrollY + 8, // 8px gap (was mt-2)
+      left: r.left + window.scrollX,
+      w: r.width,
+    });
+  };
+  useLayoutEffect(() => { if (open) updatePos(); }, [open, value]);
+  useEffect(() => {
+    if (!open) return;
+    const fn = () => updatePos();
+    window.addEventListener('resize', fn);
+    window.addEventListener('scroll', fn, true);
+    return () => {
+      window.removeEventListener('resize', fn);
+      window.removeEventListener('scroll', fn, true);
+    };
+  }, [open]);
+
+  // Close on outside click — account for the portal'd list living outside wrapRef.
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t)) return;
+      if (popupRef.current?.contains(t)) return;
+      setOpen(false);
     };
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
@@ -56,6 +89,63 @@ export default function CitySearchSelect({ value, onChange, onSelect, placeholde
       setOpen(false);
     }
   };
+
+  const listbox = (
+    <div
+      ref={popupRef}
+      id="city-listbox"
+      role="listbox"
+      className="bg-white rounded-2xl shadow-2xl border max-h-72 overflow-y-auto py-1.5"
+      style={{
+        position: 'absolute',
+        top: pos.top,
+        left: pos.left,
+        width: pos.w,
+        zIndex: 9999,
+        borderColor: theme.colors.cardBorder,
+        fontFamily: "'Vazirmatn', sans-serif",
+      }}
+      dir="rtl"
+    >
+      {!typed && (
+        <div className="flex items-center gap-1.5 px-4 pt-1 pb-2 text-xs font-bold" style={{ color: theme.colors.textMuted }}>
+          <Building2 className="w-3.5 h-3.5" />
+          شهرهای بزرگ
+        </div>
+      )}
+
+      {results.length === 0 && (
+        <div className="px-4 py-6 text-center text-sm flex flex-col items-center gap-2" style={{ color: theme.colors.textMuted }}>
+          <Search className="w-5 h-5" />
+          شهری با این نام پیدا نشد
+        </div>
+      )}
+
+      {results.map((city, i) => {
+        const isActive = i === active;
+        const isBig = !typed && BIG_CITIES.includes(city);
+        return (
+          <button
+            type="button"
+            key={city}
+            role="option"
+            aria-selected={isActive}
+            onMouseEnter={() => setActive(i)}
+            onClick={() => choose(city)}
+            className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2.5 transition-colors"
+            style={{
+              backgroundColor: isActive ? theme.colors.primaryLight : 'transparent',
+              color: isActive ? theme.colors.primary : theme.colors.textPrimary,
+              fontWeight: isBig ? 700 : 500,
+            }}
+          >
+            <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: isActive ? theme.colors.primary : theme.colors.textMuted }} />
+            <span>{city}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div ref={wrapRef} className="relative w-full">
@@ -90,53 +180,7 @@ export default function CitySearchSelect({ value, onChange, onSelect, placeholde
         </button>
       )}
 
-      {open && (
-        <div
-          id="city-listbox"
-          role="listbox"
-          className="absolute z-30 mt-2 w-full bg-white rounded-2xl shadow-2xl border max-h-72 overflow-y-auto py-1.5"
-          style={{ borderColor: theme.colors.cardBorder }}
-          dir="rtl"
-        >
-          {!typed && (
-            <div className="flex items-center gap-1.5 px-4 pt-1 pb-2 text-xs font-bold" style={{ color: theme.colors.textMuted }}>
-              <Building2 className="w-3.5 h-3.5" />
-              شهرهای بزرگ
-            </div>
-          )}
-
-          {results.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm flex flex-col items-center gap-2" style={{ color: theme.colors.textMuted }}>
-              <Search className="w-5 h-5" />
-              شهری با این نام پیدا نشد
-            </div>
-          )}
-
-          {results.map((city, i) => {
-            const isActive = i === active;
-            const isBig = !typed && BIG_CITIES.includes(city);
-            return (
-              <button
-                type="button"
-                key={city}
-                role="option"
-                aria-selected={isActive}
-                onMouseEnter={() => setActive(i)}
-                onClick={() => choose(city)}
-                className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2.5 transition-colors"
-                style={{
-                  backgroundColor: isActive ? theme.colors.primaryLight : 'transparent',
-                  color: isActive ? theme.colors.primary : theme.colors.textPrimary,
-                  fontWeight: isBig ? 700 : 500,
-                }}
-              >
-                <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: isActive ? theme.colors.primary : theme.colors.textMuted }} />
-                <span>{city}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {open && typeof document !== 'undefined' && createPortal(listbox, document.body)}
     </div>
   );
 }
