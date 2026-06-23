@@ -67,6 +67,10 @@ export default function HotelDetail() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  // Natural aspect ratio (width / height) of the main cover image. The desktop
+  // gallery frame adopts this ratio so the full image fits exactly inside the
+  // rounded frame — no empty space on any side and no cropping.
+  const [coverRatio, setCoverRatio] = useState(16 / 10);
 
   useEffect(() => {
     setCheckIn(filters.checkIn || '');
@@ -264,15 +268,28 @@ export default function HotelDetail() {
           )}
         </div>
 
-        {/* Desktop/tablet collage */}
-        <div className="hidden sm:flex gap-2 h-[280px] md:h-[440px]">
+        {/* Desktop/tablet collage — the row height follows the cover image's
+            natural aspect ratio so the main photo fits the rounded frame exactly
+            (no empty space, no cropping). */}
+        <div className="hidden sm:flex gap-2 items-stretch">
           {/* Large cover image (right in RTL) */}
           <button
             type="button"
             onClick={() => openLightbox(0)}
             className="relative group rounded-2xl md:rounded-3xl overflow-hidden flex-1"
+            style={{ aspectRatio: coverRatio }}
           >
-            <img src={galleryImages[0]} alt={hotel.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <img
+              src={galleryImages[0]}
+              alt={hotel.name}
+              onLoad={(e) => {
+                const img = e.currentTarget;
+                if (img.naturalWidth && img.naturalHeight) {
+                  setCoverRatio(img.naturalWidth / img.naturalHeight);
+                }
+              }}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
           </button>
 
