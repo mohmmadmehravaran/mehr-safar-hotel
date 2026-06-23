@@ -268,15 +268,16 @@ export default function HotelDetail() {
           )}
         </div>
 
-        {/* Desktop/tablet collage — the row height follows the cover image's
-            natural aspect ratio so the main photo fits the rounded frame exactly
-            (no empty space, no cropping). */}
-        <div className="hidden sm:flex gap-2 items-stretch">
-          {/* Large cover image (right in RTL) */}
+        {/* Desktop/tablet gallery — the main image keeps its natural aspect
+            ratio at full width, so the whole photo fits the rounded frame
+            exactly: no empty space on any side and no cropping. It is fine for
+            the image to grow taller. Extra photos sit in a strip below. */}
+        <div className="hidden sm:block">
+          {/* Main cover image — full width, natural aspect ratio */}
           <button
             type="button"
             onClick={() => openLightbox(0)}
-            className="relative group rounded-2xl md:rounded-3xl overflow-hidden flex-1"
+            className="relative group block w-full rounded-2xl md:rounded-3xl overflow-hidden bg-gray-100"
             style={{ aspectRatio: coverRatio }}
           >
             <img
@@ -293,9 +294,9 @@ export default function HotelDetail() {
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
           </button>
 
-          {/* 2x2 thumbnail grid (left in RTL) — only when there is more than one image */}
+          {/* Thumbnail strip (below the main image) — only when there is more than one image */}
           {galleryImages.length > 1 && (
-            <div className="hidden sm:grid grid-cols-2 grid-rows-2 gap-2 w-1/2">
+            <div className="grid grid-cols-4 gap-2 mt-2">
               {gridThumbs.map((img, i) => {
                 const realIndex = i + 1;
                 const isLast = i === gridThumbs.length - 1;
@@ -304,7 +305,7 @@ export default function HotelDetail() {
                     key={i}
                     type="button"
                     onClick={() => openLightbox(realIndex)}
-                    className="relative group rounded-2xl overflow-hidden"
+                    className="relative group rounded-2xl overflow-hidden aspect-[4/3]"
                   >
                     <img src={img} alt={`${hotel.name} ${realIndex + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
