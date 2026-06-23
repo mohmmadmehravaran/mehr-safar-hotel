@@ -71,6 +71,9 @@ export default function HotelDetail() {
   // gallery frame adopts this ratio so the full image fits exactly inside the
   // rounded frame — no empty space on any side and no cropping.
   const [coverRatio, setCoverRatio] = useState(16 / 10);
+  // Same idea for the side thumbnails: each one adopts its own image's natural
+  // aspect ratio so the whole photo fits its rounded frame (no gaps, no crop).
+  const [thumbRatios, setThumbRatios] = useState<Record<number, number>>({});
 
   useEffect(() => {
     setCheckIn(filters.checkIn || '');
@@ -272,7 +275,7 @@ export default function HotelDetail() {
             The main frame adopts the image's natural aspect ratio so the whole
             photo fits exactly (no empty space, no cropping); the thumbnail grid
             stretches to the same height. */}
-        <div className="hidden sm:flex gap-2 items-stretch">
+        <div className="hidden sm:flex gap-2 items-start">
           {/* Large cover image (right in RTL) — smaller than full width */}
           <button
             type="button"
@@ -294,9 +297,11 @@ export default function HotelDetail() {
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
           </button>
 
-          {/* 2x2 thumbnail grid (left in RTL) — only when there is more than one image */}
+          {/* Thumbnail grid (left in RTL) — each photo keeps its own natural
+              aspect ratio, exactly like the main image. Only shown when there
+              is more than one image. */}
           {galleryImages.length > 1 && (
-            <div className="grid flex-1 grid-cols-2 grid-rows-2 gap-2">
+            <div className="grid flex-1 grid-cols-2 gap-2 content-start">
               {gridThumbs.map((img, i) => {
                 const realIndex = i + 1;
                 const isLast = i === gridThumbs.length - 1;
@@ -305,9 +310,22 @@ export default function HotelDetail() {
                     key={i}
                     type="button"
                     onClick={() => openLightbox(realIndex)}
-                    className="relative group rounded-2xl overflow-hidden"
+                    className="relative group rounded-2xl overflow-hidden bg-gray-100"
+                    style={{ aspectRatio: thumbRatios[i] ?? 4 / 3 }}
                   >
-                    <img src={img} alt={`${hotel.name} ${realIndex + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <img
+                      src={img}
+                      alt={`${hotel.name} ${realIndex + 1}`}
+                      onLoad={(e) => {
+                        const el = e.currentTarget;
+                        if (el.naturalWidth && el.naturalHeight) {
+                          setThumbRatios((prev) =>
+                            prev[i] ? prev : { ...prev, [i]: el.naturalWidth / el.naturalHeight }
+                          );
+                        }
+                      }}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                     {isLast && (
                       <span className="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/70 text-white text-xs font-medium rounded-lg backdrop-blur-md pointer-events-none">
