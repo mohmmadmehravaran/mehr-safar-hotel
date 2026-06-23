@@ -240,11 +240,10 @@ export default function HotelDetail() {
                 key={i}
                 type="button"
                 onClick={() => openLightbox(i)}
-                className="relative shrink-0 w-full h-full rounded-2xl overflow-hidden bg-gray-100"
+                className="relative shrink-0 w-full h-full rounded-2xl overflow-hidden"
                 style={{ scrollSnapAlign: 'center', scrollSnapStop: 'always' }}
               >
-                <img src={img} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl" />
-                <img src={img} alt={`${hotel.name} ${i + 1}`} className="relative w-full h-full object-contain" />
+                <img src={img} alt={`${hotel.name} ${i + 1}`} className="w-full h-full object-fill" />
               </button>
             ))}
           </div>
@@ -271,10 +270,9 @@ export default function HotelDetail() {
           <button
             type="button"
             onClick={() => openLightbox(0)}
-            className="relative group rounded-2xl md:rounded-3xl overflow-hidden flex-1 bg-gray-100"
+            className="relative group rounded-2xl md:rounded-3xl overflow-hidden flex-1"
           >
-            <img src={galleryImages[0]} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl" />
-            <img src={galleryImages[0]} alt={hotel.name} className="relative w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" />
+            <img src={galleryImages[0]} alt={hotel.name} className="w-full h-full object-fill transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
           </button>
 
@@ -289,10 +287,9 @@ export default function HotelDetail() {
                     key={i}
                     type="button"
                     onClick={() => openLightbox(realIndex)}
-                    className="relative group rounded-2xl overflow-hidden bg-gray-100"
+                    className="relative group rounded-2xl overflow-hidden"
                   >
-                    <img src={img} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl" />
-                    <img src={img} alt={`${hotel.name} ${realIndex + 1}`} className="relative w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" />
+                    <img src={img} alt={`${hotel.name} ${realIndex + 1}`} className="w-full h-full object-fill transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                     {isLast && (
                       <span className="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/70 text-white text-xs font-medium rounded-lg backdrop-blur-md pointer-events-none">
