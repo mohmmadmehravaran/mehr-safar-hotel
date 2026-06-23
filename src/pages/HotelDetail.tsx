@@ -40,7 +40,7 @@ const amenityIcons: Record<string, React.ReactNode> = {
 export default function HotelDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { hotels, reviews, addBooking, filters, setFilters } = useApp();
+  const { hotels, reviews, addBooking, filters, setFilters, loading } = useApp();
   const { groups } = useCards();
   const { theme } = useTheme();
   // هتل را ابتدا از لیست هتل‌ها پیدا می‌کنیم؛ اگر نبود (مثلاً هتلی که فقط به‌صورت
@@ -164,6 +164,21 @@ export default function HotelDetail() {
   }, [lightboxIndex, hotel]);
 
   if (!hotel) {
+    // While hotel data is still being fetched, show a loading state instead of
+    // flashing "not found" before the list arrives.
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: theme.colors.bodyBg }}>
+          <div className="flex flex-col items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-full border-4 animate-spin"
+              style={{ borderColor: theme.colors.cardBorder, borderTopColor: theme.colors.primary }}
+            />
+            <span className="text-sm" style={{ color: theme.colors.textMuted }}>در حال بارگذاری…</span>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: theme.colors.bodyBg }}>
         <div className="text-center">
