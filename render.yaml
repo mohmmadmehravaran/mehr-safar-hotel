@@ -1,0 +1,28 @@
+# One-click deploy to Render (https://render.com) as a SINGLE service that
+# serves BOTH the built frontend and the API.
+# In the dashboard: New > Blueprint, point it at this repo.
+services:
+  - type: web
+    name: mehr-safar-app
+    runtime: node
+    plan: free
+    buildCommand: "npm install --include=dev && npm run build && mkdir -p server/public && cp dist/index.template.html server/public/index.html && (cp -f published-site-config.json server/public/ || true) && cd server && npm install --include=dev && npx prisma generate && npm run build"
+    startCommand: "cd server && npx prisma db push --skip-generate && npm run db:seed && npm start"
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:./prod.db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: admin123
+      - key: ADMIN_NAME
+        value: مدیر سیستم
