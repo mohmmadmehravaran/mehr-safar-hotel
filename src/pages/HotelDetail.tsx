@@ -243,7 +243,7 @@ export default function HotelDetail() {
                 className="relative shrink-0 w-full h-full rounded-2xl overflow-hidden"
                 style={{ scrollSnapAlign: 'center', scrollSnapStop: 'always' }}
               >
-                <img src={img} alt={`${hotel.name} ${i + 1}`} className="w-full h-full object-fill" />
+                <img src={img} alt={`${hotel.name} ${i + 1}`} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>
@@ -272,7 +272,7 @@ export default function HotelDetail() {
             onClick={() => openLightbox(0)}
             className="relative group rounded-2xl md:rounded-3xl overflow-hidden flex-1"
           >
-            <img src={galleryImages[0]} alt={hotel.name} className="w-full h-full object-fill transition-transform duration-700 group-hover:scale-105" />
+            <img src={galleryImages[0]} alt={hotel.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
           </button>
 
@@ -289,7 +289,7 @@ export default function HotelDetail() {
                     onClick={() => openLightbox(realIndex)}
                     className="relative group rounded-2xl overflow-hidden"
                   >
-                    <img src={img} alt={`${hotel.name} ${realIndex + 1}`} className="w-full h-full object-fill transition-transform duration-700 group-hover:scale-105" />
+                    <img src={img} alt={`${hotel.name} ${realIndex + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                     {isLast && (
                       <span className="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/70 text-white text-xs font-medium rounded-lg backdrop-blur-md pointer-events-none">
